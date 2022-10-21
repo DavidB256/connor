@@ -8,8 +8,6 @@ import yaml
 with open("config.yaml", "r") as f:
     yd = yaml.safe_load(f)
 
-print("Config file loaded.")
-
 def model_func(params, ns, pop_ids=None):
     return moments.Demographics2D.split_mig(params, ns, pop_ids=pop_ids).fold()
 
@@ -17,7 +15,6 @@ data_dict = moments.Misc.make_data_dict_vcf(yd["vcf_file"], yd["popinfo_file"])
 print("VCF loaded.")
 fs = moments.Spectrum.from_data_dict(data_dict, pop_ids=yd["pop_names"],
                                      projections=yd["projections"], polarized=False)
-print("VCF converted to spectrum.")
 
 # Setup for moments
 lower_bound = [1e-4, 1e-4, 1e-4, 1e-4]
