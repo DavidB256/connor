@@ -1,0 +1,4 @@
+*.vcf
+*.gz
+__pycache__/
+*.popinfo
