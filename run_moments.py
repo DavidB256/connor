@@ -10,7 +10,14 @@ with open("config.yaml", "r") as f:
     yd = yaml.safe_load(f)
 
 def model_func(params, ns, pop_ids=None):
-    return moments.Demographics2D.split_mig(params, ns, pop_ids=pop_ids).fold()
+    if yd["model"] == "split_mig":
+        return moments.Demographics2D.split_mig(params, ns, pop_ids=pop_ids).fold()
+    elif yd["model"] == "split_no_mig":
+        return mm.split_no_mig(params, ns, pop_ids)
+    elif yd["model"] == "split_mig_asymmetric":
+        return mm.split_mig_asymmetric(params, ns, pop_ids)
+    else:
+        raise "Model name not recognized."
 
 # Load VCF as serialized data_dict object.
 with open(yd["data_dict_pickle_file"], "rb") as f:
@@ -23,8 +30,10 @@ fs = moments.Spectrum.from_data_dict(data_dict, pop_ids=yd["pop_names"],
 print("SFS loaded.")
 
 # Setup for moments inference.
-lower_bound = [1e-4, 1e-4, 1e-4, 1e-4]
-upper_bound = [10, 10, 10, 10]
+model_to_num_of_params = ["split_mig": 4, "split_no_mig": 3, split_mig_asymmetric: 5]
+lower_bound = [1e-4 for i in range(model_to_num_of_params[yd["model"]])]
+upper_bound = [10 for i in range(model_to_num_of_params[yd["model"]])]
+
 ns = [i - 1 for i in fs.shape]
 
 # Perform inference "rep" many times and choose the parameter estimates from the
@@ -47,7 +56,11 @@ for rep in range(yd["num_of_inference_repeats"]):
     popt[0] *= conversion_coeff
     popt[1] *= conversion_coeff
     popt[2] *= 2 * conversion_coeff
-    popt[3] /= 2 * conversion_coeff
+    if yd["model"] == "split_mig":
+        popt[3] /= 2 * conversion_coeff
+    elif yd["model"] == "split_mig_asymmetric":
+        popt[3] /= 2 * conversion_coeff
+        popt[4] /= 2 * conversion_coeff
 
     # Print to output file.
     with open(yd["output_file"], "a") as f:
