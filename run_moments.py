@@ -33,7 +33,7 @@ print("SFS loaded.")
 # Setup for moments inference.
 model_to_num_of_params = {"split_mig": 4, "split_no_mig": 3, "split_mig_asymmetric": 5}
 lower_bound = [1e-4 for i in range(model_to_num_of_params[yd["model"]])]
-upper_bound = [100 for i in range(model_to_num_of_params[yd["model"]])]
+upper_bound = [10 for i in range(model_to_num_of_params[yd["model"]])]
 
 ns = [i - 1 for i in fs.shape]
 
