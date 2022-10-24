@@ -2,4 +2,3 @@
 *.gz
 __pycache__/
 *.popinfo
-*.pickle
