@@ -3,6 +3,7 @@ import numpy as np
 import yaml
 import pickle
 import moments_models as mm
+import sys
 
 # Adapted for Connor's inference
 
@@ -15,7 +16,7 @@ def model_func(params, ns, pop_ids=None):
         return moments.Demographics2D.split_mig(params, ns, pop_ids=pop_ids).fold()
     elif yd["model"] == "split_no_mig":
         return mm.split_no_mig(params, ns, pop_ids)
-    elif yd["model"] == "split_mig_asymmetric":
+    elif yd["model"] == "split_mig_asym":
         return mm.split_mig_asymmetric(params, ns, pop_ids)
     else:
         raise "Model name not recognized."
@@ -24,14 +25,15 @@ def model_func(params, ns, pop_ids=None):
 with open(yd["data_dict_pickle_file"], "rb") as f:
     data_dict = pickle.load(f)
 # Convert data_dict object into Spectrum object.
+proj = sys.argv[1]
 fs = moments.Spectrum.from_data_dict(data_dict, pop_ids=yd["pop_names"],
-                                     projections=yd["projections"],
+                                     projections=[int(proj)] * 2,
                                      polarized=False)
 
 print("SFS loaded.")
 
 # Setup for moments inference.
-model_to_num_of_params = {"split_mig": 4, "split_no_mig": 3, "split_mig_asymmetric": 5}
+model_to_num_of_params = {"split_mig": 4, "split_no_mig": 3, "split_mig_asym": 5}
 lower_bound = [1e-4 for i in range(model_to_num_of_params[yd["model"]])]
 upper_bound = [10 for i in range(model_to_num_of_params[yd["model"]])]
 
@@ -59,14 +61,14 @@ for rep in range(yd["num_of_inference_repeats"]):
     popt[2] *= 2 * conversion_coeff
     if yd["model"] == "split_mig":
         popt[3] /= 2 * conversion_coeff
-    elif yd["model"] == "split_mig_asymmetric":
+    elif yd["model"] == "split_mig_asym":
         popt[3] /= 2 * conversion_coeff
         popt[4] /= 2 * conversion_coeff
 
     # Print to output file.
     with open(yd["output_file"], "a") as f:
-        for n in yd["projections"]:
-            f.write(str(n) + "\t")
+        f.write(yd["model"] + "\t")
+        f.write(proj + "\t")
         f.write(str(theta) + "\t")
         f.write(str(log_likelihood) + "\t")
         for param in popt:
