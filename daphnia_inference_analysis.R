@@ -2,74 +2,94 @@
 library(tidyverse)
 setwd("C:/Users/David/Desktop/Bergland/data")
 
-# Load in inference results
-o1 <- read.table("op1_all_params_split_mig.txt")
-o2 <- read.table("op2_all_params_split_no_mig.txt")
-o3 <- read.table("op3_all_params_split_mig_asym.txt")
+# Load in inference results under split_mig, split_no_mig, and split_mig_asym
+# models, respectively
+o1 <- read.table("op1_all_params_split_mig.txt",
+                 col.names = c("model", "size", "theta", "ll",
+                               "NA_pop_est", "EU_pop_est", "t_est", "m_est",
+                               "NA_pop_sd", "EU_pop_sd", "t_sd", "m_sd", "theta_sd"))
+o2 <- read.table("op2_all_params_split_no_mig.txt",
+                 col.names = c("model", "size", "theta", "ll",
+                               "NA_pop_est", "EU_pop_est", "t_est",
+                               "NA_pop_sd", "EU_pop_sd", "t_sd", "theta_sd"))
+o3 <- read.table("op3_all_params_split_mig_asym.txt",
+                 col.names = c("model", "size", "theta", "ll",
+                               "NA_pop_est", "EU_pop_est", "t_est", "m1_est", "m2_est",
+                               "NA_pop_sd", "EU_pop_sd", "t_sd", "m1_sd", "m2_sd", "theta_sd"))
 
-# Get maximum of log-likelihood function at each SFS size under each model
+# Get maximum of log-likelihood function for inference on each SFS size under 
+# each model
 o1_max <- o1 %>% 
-  group_by(nu=V2) %>%
-  summarize(split_mig_ll=max(V4))
+  group_by(size) %>%
+  summarize(split_mig_ll=max(ll))
 o2_max <- o2 %>% 
-  group_by(nu=V2) %>%
-  summarize(split_no_mig_ll=max(V4))
+  group_by(size) %>%
+  summarize(split_no_mig_ll=max(ll))
 o3_max <- o3 %>% 
-  group_by(nu=V2) %>%
-  summarize(split_mig_asym_ll=max(V4))
+  group_by(size) %>%
+  summarize(split_mig_asym_ll=max(ll))
 
-# Prepare data for plotting
+# Combine data frames to compare likelihoods across models
 oa <- o1_max %>% 
-  left_join(o2_max, by="nu") %>%
-  left_join(o3_max, by="nu")
+  left_join(o2_max, by="size") %>%
+  left_join(o3_max, by="size")
 
-# Scatterplot showing optimal model at each SFS size
+# Visualizations
 ggplot(oa[-8, ] %>% pivot_longer(c(2:4)),
-       aes(x=nu, y=value, color=name)) +
-  geom_point()
-
-# Faceted scatterplots showing linear relationships between
-# log-likelihood maxima and SFS size
+       aes(x=size, y=value, color=name)) +
+  geom_point(size=2) + 
+  xlab("SFS size") +
+  ylab("Maximum log-likelihood") + 
+  ggtitle("Size of SFS vs. maxima of log-likelihood functions under different models") +
+  labs(color = "Model")
+  
 ggplot(oa %>% pivot_longer(c(2:4)),
-       aes(x=nu, y=value, color=name)) +
+       aes(x=size, y=value, color=name)) +
   geom_point() +
   geom_smooth(method="lm", formula=y~x, se=FALSE) +
-  facet_grid(~ name)
+  facet_grid(~ name) +
+  xlab("Size of SFS") +
+  ylab("Maximum of log-likelihood function") +
+  labs(color="Model")
 
-# Create linear models to check linear relationships between
-# log-likelihood maxima and SFS size
-lm(data=o1_max, split_mig_ll ~ nu + 0) %>% summary
-lm(data=o2_max, split_no_mig_ll ~ nu + 0) %>% summary
-lm(data=o3_max, split_mig_asym_ll ~ nu + 0) %>% summary
+# Confirm linear relationships between log-likelihood maxima and SFS size with
+# Wald test on OLS regression coefficient p-values
+lm(data=o1_max, split_mig_ll ~ size + 0) %>% summary
+lm(data=o2_max, split_no_mig_ll ~ size + 0) %>% summary
+lm(data=o3_max, split_mig_asym_ll ~ size + 0) %>% summary
 
-# Perform model selection with LRT
+# Perform model selection between split_mig and split_no_mig with likelihood ratio-
+# test (LRT)
 oa %>%
   mutate(lr = -2 * (split_no_mig_ll - split_mig_ll)) %>%
   mutate(p = pchisq(lr, df=1, lower.tail=FALSE))
 # Conclude that split_mig model is preferred to the split_no_mig model
-# at all SFS sizes greater than 4x4.
+# at all SFS sizes greater than 3, which is too small to ever be used in practice.
+# LRT is likely invalid here because the constrained model is seen with a greater
+# likelihood than the unconstrained model in the size=3 case.
 
-# Convert estimates from optimal models at nu=20 back into moments units
+# Convert estimates from optimal models at size=20 back into moments units
 # for use in plotting in a Jupyter notebook
 coeff <- 934.2784 / (4 * 5.69e-9 * 200000)
+# 934.2784 is the value of theta for the optimal inference run under the split_mig
+# model. 5.69e-9 is the mutation rate. 200,000 is the genome size.
 o1 %>% select(2:8) %>%
-  filter(V2==20) %>%
-  filter(V4 == max(V4)) %>%
-  mutate(V5 = V5 / coeff,
-         V6 = V6 / coeff,
-         V7 = V7 / (2 * coeff),
-         V8 = V8 * 2 * coeff)
+  filter(size==20) %>%
+  filter(ll == max(ll)) %>%
+  mutate(NA_pop_est = NA_pop_est / coeff,
+         EU_pop_est = EU_pop_est / coeff,
+         t_est = t_est / (2 * coeff),
+         m_est = m_est * 2 * coeff)
 
 coeff <- 5161.235 / (4 * 5.69e-9 * 200000)
+# 5161.235 is the value of theta for the optimal inference run under the split_no_mig
+# model.
 o2 %>% select(2:7) %>%
-  filter(V2==20) %>%
-  filter(V4 == max(V4)) %>%
-  mutate(V5 = V5 / coeff,
-         V6 = V6 / coeff,
-         V7 = V7 / (2 * coeff))
-
-
-
+  filter(size==20) %>%
+  filter(ll == max(ll)) %>%
+  mutate(NA_pop_est = NA_pop_est / coeff,
+         EU_pop_est = EU_pop_est / coeff,
+         t_est = t_est / (2 * coeff))
 
 
 
