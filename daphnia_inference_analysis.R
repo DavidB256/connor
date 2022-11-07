@@ -91,6 +91,10 @@ o2 %>% select(2:7) %>%
          EU_pop_est = EU_pop_est / coeff,
          t_est = t_est / (2 * coeff))
 
+  
+
+
+
 
 
 
