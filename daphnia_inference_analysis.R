@@ -91,7 +91,28 @@ o2 %>% select(2:7) %>%
          EU_pop_est = EU_pop_est / coeff,
          t_est = t_est / (2 * coeff))
 
-  
+# Convert estimates from optimal models at size=100 back into moments units
+# for use in plotting in a Jupyter notebook
+coeff <- 934.0159 / (4 * 5.69e-9 * 200000)
+# 934.0159 is the value of theta for the optimal inference run under the split_mig
+# model. 5.69e-9 is the mutation rate. 200,000 is the genome size.
+o1 %>% select(2:8) %>%
+  filter(size==100) %>%
+  filter(ll == max(ll)) %>%
+  mutate(NA_pop_est = NA_pop_est / coeff,
+         EU_pop_est = EU_pop_est / coeff,
+         t_est = t_est / (2 * coeff),
+         m_est = m_est * 2 * coeff)
+
+coeff <- 5343.133 / (4 * 5.69e-9 * 200000)
+# 5343.133 is the value of theta for the optimal inference run under the split_no_mig
+# model.
+o2 %>% select(2:7) %>%
+  filter(size==100) %>%
+  filter(ll == max(ll)) %>%
+  mutate(NA_pop_est = NA_pop_est / coeff,
+         EU_pop_est = EU_pop_est / coeff,
+         t_est = t_est / (2 * coeff))
 
 
 
