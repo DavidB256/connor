@@ -1,10 +1,10 @@
 # Config file for Connor's inference
 mutation_rate: !!float 5.69e-9
 seq_len: 200000
-output_file: /scratch/djb3ve/connor/inference_output/op1_all_params_split_mig_asym.txt
-data_dict_pickle_file: /scratch/djb3ve/connor/data_dict.pickle
+output_file: /scratch/djb3ve/connor/inference_output/op4_mlg_split_mig_output.txt
+data_dict_pickle_file: /scratch/djb3ve/connor/run_moments/daphnia.filt.mlg.genome.11.18.22_data_dict.pickle
 popinfo_file: /scratch/djb3ve/connor/moments_list.popinfo
 pop_names: [Daphnia.pulex.NorthAmerica, Daphnia.pulex.Europe]
-num_of_inference_repeats: 6
+num_of_inference_repeats: 5
 verbosity: 0
 model: split_mig
