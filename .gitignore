@@ -4,3 +4,4 @@ __pycache__/
 *.popinfo
 errors_slurm/
 output_slurm/
+*.pickle
