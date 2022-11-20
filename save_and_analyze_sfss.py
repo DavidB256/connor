@@ -6,17 +6,17 @@ from math import log
 
 # Setup
 dir = "/scratch/djb3ve/connor/"
-pickle_file = dir + "run_moments/daphnia.filtered.chr.busco_data_dict.pickle"
-#pickle_file = dir + "run_moments/daphnia.filt.mlg.genome.11.18.22_data_dict.pickle"
+#pickle_file = dir + "run_moments/daphnia.filtered.chr.busco_data_dict.pickle"
+pickle_file = dir + "run_moments/daphnia.filt.mlg.genome.11.18.22_data_dict.pickle"
 output_file = dir + "sfs_statistics.txt"
 csv_dir = dir + "sfs_csvs/"
 sfs_dir = dir + "sfss/"
 pop_ids = ["Daphnia.pulex.NorthAmerica", "Daphnia.pulex.Europe"]
 prior_estimated_params = [7e5, 2e5, 1e7 / 2, 1e-8 * 2]
-split_mig_params = [6.358476, 1.032427, 9.989897, 0.007727318]
-split_no_mig_params = [1.065988, 0.2213014, 0.8256301, 0]
-#split_mig_params = [6.758185, 1.1126711, 9.9724427, 0.008836859]
-#split_no_mig_params = [1.127693, 0.2289919, 0.7780228, 0]
+#split_mig_params = [6.358476, 1.032427, 9.989897, 0.007727318]
+#split_no_mig_params = [1.065988, 0.2213014, 0.8256301, 0]
+split_mig_params = [6.758185, 1.1126711, 9.9724427, 0.008836859]
+split_no_mig_params = [1.127693, 0.2289919, 0.7780228, 0]
 
 
 def save_sfs_as_csv_and_npy(sfs, sfs_name):
@@ -90,6 +90,7 @@ with open(output_file, "a") as fout:
 
         sfs_from_ests = moments.Demographics2D.split_mig(prior_estimated_params, ns,
                                                    pop_ids=pop_ids).fold()
+        sfs_from_ests *= moments.Inference.optimal_sfs_scaling(sfs_from_ests, sfs_empirical)
         save_sfs_as_csv_and_npy(sfs_from_ests, "sfs_from_ests_" + str(ns[0]))
         outputs = ["mlg", ns[0], "sfs_from_ests",
                    get_AIC(sfs_from_ests, sfs_empirical, 4),
@@ -99,6 +100,7 @@ with open(output_file, "a") as fout:
 
         sfs_split_mig_model = moments.Demographics2D.split_mig(split_mig_params, ns,
                                                               pop_ids=pop_ids).fold()
+        sfs_split_mig_model *= moments.Inference.optimal_sfs_scaling(sfs_split_mig_model, sfs_empirical)
         save_sfs_as_csv_and_npy(sfs_split_mig_model, "sfs_split_mig_model_" + str(ns[0]))
         outputs = ["mlg", ns[0], "sfs_split_mig_model",
                    get_AIC(sfs_split_mig_model, sfs_empirical, 4),
@@ -108,6 +110,7 @@ with open(output_file, "a") as fout:
 
         sfs_split_no_mig_model = moments.Demographics2D.split_mig(split_no_mig_params, ns,
                                                                  pop_ids=pop_ids).fold()
+        sfs_split_no_mig_model *= moments.Inference.optimal_sfs_scaling(sfs_split_no_mig_model, sfs_empirical)
         save_sfs_as_csv_and_npy(sfs_split_no_mig_model, "sfs_split_no_mig_model_" + str(ns[0]))
         outputs = ["mlg", ns[0], "sfs_split_no_mig_model",
                    get_AIC(sfs_split_no_mig_model, sfs_empirical, 3),
