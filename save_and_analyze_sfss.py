@@ -6,17 +6,22 @@ from math import log
 
 # Setup
 dir = "/scratch/djb3ve/connor/"
-#pickle_file = dir + "run_moments/daphnia.filtered.chr.busco_data_dict.pickle"
+
+# vcf = "busco"
+# pickle_file = dir + "run_moments/daphnia.filtered.chr.busco_data_dict.pickle"
+# split_mig_params = [6.358476, 1.032427, 9.989897, 0.007727318]
+# split_no_mig_params = [1.065988, 0.2213014, 0.8256301, 0]
+
+vcf = "filt"
 pickle_file = dir + "run_moments/daphnia.filt.mlg.genome.11.18.22_data_dict.pickle"
+split_mig_params = [6.758185, 1.1126711, 9.9724427, 0.008836859]
+split_no_mig_params = [1.127693, 0.2289919, 0.7780228, 0]
+
 output_file = dir + "sfs_statistics.txt"
 csv_dir = dir + "sfs_csvs/"
 sfs_dir = dir + "sfss/"
 pop_ids = ["Daphnia.pulex.NorthAmerica", "Daphnia.pulex.Europe"]
 prior_estimated_params = [7e5, 2e5, 1e7 / 2, 1e-8 * 2]
-#split_mig_params = [6.358476, 1.032427, 9.989897, 0.007727318]
-#split_no_mig_params = [1.065988, 0.2213014, 0.8256301, 0]
-split_mig_params = [6.758185, 1.1126711, 9.9724427, 0.008836859]
-split_no_mig_params = [1.127693, 0.2289919, 0.7780228, 0]
 
 
 def save_sfs_as_csv_and_npy(sfs, sfs_name):
@@ -40,6 +45,10 @@ def get_BIC(sfs, sfs_empirical, k, sfs_size):
     ll = moments.Inference.ll_multinom(sfs, sfs_empirical)
     BIC = k * log(n) - 2 * ll
     return BIC
+
+def get_normalized_ll(sfs, sfs_empirical):
+    ll = moments.Inference.ll_multinom(sfs, sfs_empirical / np.sum(sfs_empirical))
+    return ll
 
 def get_shared_allele_prop(sfs, maf_threshold=0.01):
     # Iterate through sfs, summing element values, but skipping entries corresponding
@@ -85,16 +94,17 @@ with open(output_file, "a") as fout:
                                                   projections=ns,
                                                   polarized=False)
         save_sfs_as_csv_and_npy(sfs_empirical, "sfs_empirical_" + str(ns[0]))
-        outputs = ["mlg", ns[0], "sfs_empirical", "NA", "NA", get_shared_allele_prop(sfs_empirical)]
+        outputs = [vcf, ns[0], "sfs_empirical", "NA", "NA", "NA", get_shared_allele_prop(sfs_empirical)]
         write_output(fout, outputs)
 
         sfs_from_ests = moments.Demographics2D.split_mig(prior_estimated_params, ns,
                                                    pop_ids=pop_ids).fold()
         sfs_from_ests *= moments.Inference.optimal_sfs_scaling(sfs_from_ests, sfs_empirical)
         save_sfs_as_csv_and_npy(sfs_from_ests, "sfs_from_ests_" + str(ns[0]))
-        outputs = ["mlg", ns[0], "sfs_from_ests",
+        outputs = [vcf, ns[0], "sfs_from_ests",
                    get_AIC(sfs_from_ests, sfs_empirical, 4),
                    get_BIC(sfs_from_ests, sfs_empirical, 4, ns[0] + 1),
+                   get_normalized_ll(sfs_from_ests, sfs_empirical),
                    get_shared_allele_prop(sfs_from_ests)]
         write_output(fout, outputs)
 
@@ -102,9 +112,10 @@ with open(output_file, "a") as fout:
                                                               pop_ids=pop_ids).fold()
         sfs_split_mig_model *= moments.Inference.optimal_sfs_scaling(sfs_split_mig_model, sfs_empirical)
         save_sfs_as_csv_and_npy(sfs_split_mig_model, "sfs_split_mig_model_" + str(ns[0]))
-        outputs = ["mlg", ns[0], "sfs_split_mig_model",
+        outputs = [vcf, ns[0], "sfs_split_mig_model",
                    get_AIC(sfs_split_mig_model, sfs_empirical, 4),
                    get_BIC(sfs_split_mig_model, sfs_empirical, 4, ns[0] + 1),
+                   get_normalized_ll(sfs_split_mig_model, sfs_empirical),
                    get_shared_allele_prop(sfs_split_mig_model)]
         write_output(fout, outputs)
 
@@ -112,9 +123,10 @@ with open(output_file, "a") as fout:
                                                                  pop_ids=pop_ids).fold()
         sfs_split_no_mig_model *= moments.Inference.optimal_sfs_scaling(sfs_split_no_mig_model, sfs_empirical)
         save_sfs_as_csv_and_npy(sfs_split_no_mig_model, "sfs_split_no_mig_model_" + str(ns[0]))
-        outputs = ["mlg", ns[0], "sfs_split_no_mig_model",
+        outputs = [vcf, ns[0], "sfs_split_no_mig_model",
                    get_AIC(sfs_split_no_mig_model, sfs_empirical, 3),
                    get_BIC(sfs_split_no_mig_model, sfs_empirical, 3, ns[0] + 1),
+                   get_normalized_ll(sfs_split_no_mig_model, sfs_empirical),
                    get_shared_allele_prop(sfs_split_no_mig_model)]
         write_output(fout, outputs)
 
