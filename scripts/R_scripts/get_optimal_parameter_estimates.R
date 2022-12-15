@@ -56,7 +56,8 @@ opt_inf_op_raw %>%
   select(vcf, model, NA_pop_est, EU_pop_est, t_est, m_est, theta) %>%
   arrange(vcf, model)
 
-# Convert output using McCoy et al. 2014's ancestral population-based method
+# Convert output using McCoy et al. 2014's ancestral population-based method.
+# This is what we ultimately used in the paper.
 opt_inf_op_raw %>% 
   mutate(N_anc_est = 200000 / EU_pop_est,
          NA_pop_est = NA_pop_est * N_anc_est,

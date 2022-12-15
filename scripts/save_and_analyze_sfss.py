@@ -4,22 +4,27 @@ import numpy as np
 import pickle
 from math import log
 
+# Given moments' parameter estimates, reconstruct SFSs corresponding to optimal models.
+# Serialize the SFSs as .npy files and save them as CSVs for later use in R visualization.
+# Calculate summary statistics like shared allele proportion (SAP) and normalized log-likelihood (ll)
+# and save them to an output file.
+
 # Setup
 dir = "/scratch/djb3ve/connor/"
 
 # vcf = "busco"
-# pickle_file = dir + "run_moments/daphnia.filtered.chr.busco_data_dict.pickle"
+# pickle_file = dir + "data/daphnia.filtered.chr.busco_data_dict.pickle"
 # split_mig_params = [6.358476, 1.032427, 9.989897, 0.007727318]
 # split_no_mig_params = [1.065988, 0.2213014, 0.8256301, 0]
 
 vcf = "filt"
-pickle_file = dir + "run_moments/daphnia.filt.mlg.genome.11.18.22_data_dict.pickle"
+pickle_file = dir + "data/daphnia.filt.mlg.genome.11.18.22_data_dict.pickle"
 split_mig_params = [6.758185, 1.1126711, 9.9724427, 0.008836859]
 split_no_mig_params = [1.127693, 0.2289919, 0.7780228, 0]
 
-output_file = dir + "sfs_statistics.txt"
-csv_dir = dir + "sfs_csvs/"
-sfs_dir = dir + "sfss/"
+output_file = dir + "output/sfs_statistics.txt"
+csv_dir = dir + "sfss/sfs_csvs/"
+sfs_dir = dir + "sfss/sfs_npys/"
 pop_ids = ["Daphnia.pulex.NorthAmerica", "Daphnia.pulex.Europe"]
 prior_estimated_params = [7e5, 2e5, 1e7 / 2, 1e-8 * 2]
 
