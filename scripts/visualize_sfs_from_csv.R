@@ -1,3 +1,5 @@
+# Code to generate Supplementary Figure 3 from saved CSVs representing site frequency spectra
+
 # Setup
 library(tidyverse)
 setwd("C:/Users/David/Desktop/Bergland/data/sfs_csvs/")
